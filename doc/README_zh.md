@@ -328,6 +328,17 @@ urn:miot-spec-v2:device:gateway:0000A019:xiaomi-hub1:
 
 所有设备的设备信息服务（ urn:miot-spec-v2:service:device-information:00007801 ）均不会生成 Home Assistant 实体。
 
+## Entity ID 兼容性
+
+集成会分别保存 MIoT 派生的 unique ID 和 Home Assistant entity ID。
+
+Unique ID 用于稳定匹配 Entity Registry。Entity ID 使用实体所属的 Home
+Assistant 平台 domain，并对 object ID 进行 slug 转换。这样可以避免设备或
+属性名称中的无效字符生成非法 entity ID。
+
+Home Assistant Registry 可以保留用户已经修改过的 entity ID。不要把
+entity ID 当作稳定的 MIoT 设备或属性身份。
+
 ## 多语言支持
 
 米家集成配置选项中可选择的集成使用的语言有简体中文、繁体中文、英文、西班牙语、俄语、法语、德语、日语、意大利语、荷兰语、葡萄牙语、巴西葡萄牙语、土耳其语这十三种语言。目前，米家集成配置页面的简体中文和英文已经过人工校审，其他语言由机器翻译或社区贡献。如果您希望修改配置页面的词句，则需要修改 `custom_components/xiaomi_home/translations/` 以及 `custom_components/xiaomi_home/miot/i18n/` 目录下相应语言的 json 文件。
@@ -387,6 +398,9 @@ siid、piid、eiid、aiid、value 均为十进制三位整数。
 - [更新日志](../CHANGELOG.md)
 - 开发文档： https://developers.home-assistant.io/docs/creating_component_index
 - [常见问题](https://github.com/XiaoMi/ha_xiaomi_home/wiki)
+
+英文用户说明采用 ASD-STE100 Simplified Technical English Issue 9 的实用
+原则，包括主动语态、短句和一致术语。这不代表 ASD-STE100 合规认证。
 
 ## 目录结构
 

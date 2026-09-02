@@ -2,14 +2,21 @@
 
 [English](./README.md) | [简体中文](./doc/README_zh.md)
 
-Xiaomi Home Integration is an integrated component of Home Assistant supported by Xiaomi official. It allows you to use Xiaomi IoT smart devices in Home Assistant.
+Connect supported Xiaomi IoT devices to Home Assistant.
+
+Xiaomi provides and supports this official custom integration. The integration
+uses MIoT specifications to create Home Assistant devices and entities.
+
+> [!IMPORTANT]
+> Protect the Home Assistant configuration directory and its backups. They
+> contain Xiaomi account tokens, device data, and local certificates.
 
 ## Installation
 
-> Home Assistant version requirement:
->
-> - Core $\geq$ 2024.4.4
-> - Operating System $\geq$ 13.0
+Requirements:
+
+- Home Assistant Core 2024.4.4 or later
+- Home Assistant Operating System 13.0 or later
 
 ### Method 1: Git clone from GitHub
 
@@ -20,9 +27,9 @@ cd ha_xiaomi_home
 ./install.sh /config
 ```
 
-We recommend this installation method, for it is convenient to switch to a tag when updating `xiaomi_home` to a certain version.
+Use this method when you must install or test a specific tag.
 
-For example, update to version v1.0.0
+For example, install version `v1.0.0`:
 
 ```bash
 cd config/ha_xiaomi_home
@@ -37,49 +44,56 @@ One-click installation from HACS:
 
 [![Open your Home Assistant instance and open the Xiaomi Home integration inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=XiaoMi&repository=ha_xiaomi_home&category=integration)
 
-Or, HACS > In the search box, type **Xiaomi Home** > Click **Xiaomi Home**, getting into the detail page > DOWNLOAD
+You can also open HACS, search for **Xiaomi Home**, and select **Download**.
 
-### Method 3: Manually installation via [Samba](https://github.com/home-assistant/addons/tree/master/samba) / [FTPS](https://github.com/hassio-addons/addon-ftp)
+### Method 3: Manual installation
 
-Download and copy `custom_components/xiaomi_home` folder to `config/custom_components` folder in your Home Assistant.
+1. Download the repository.
+2. Copy `custom_components/xiaomi_home` to `config/custom_components/xiaomi_home`.
+3. Restart Home Assistant.
 
 ## Configuration
 
-### Login
+### Sign in
 
-[Settings > Devices & services > ADD INTEGRATION](https://my.home-assistant.io/redirect/brand/?brand=xiaomi_home) > Search `Xiaomi Home` > NEXT > Click here to login > Sign in with Xiaomi account
+1. Open [Settings > Devices & services](https://my.home-assistant.io/redirect/brand/?brand=xiaomi_home).
+2. Add **Xiaomi Home**.
+3. Select the Xiaomi Cloud region.
+4. Sign in with a Xiaomi account.
 
 [![Open your Home Assistant instance and start setting up a new Xiaomi Home integration instance.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=xiaomi_home)
 
-### Add MIoT Devices
+### Add MIoT devices
 
-After logging in successfully, a dialog box named "Select Home and Devices" pops up. You can select the home containing the device that you want to import in Home Assistant.
+Select the homes and devices that Home Assistant must import.
 
-### Multiple User Login
+### Add another account
 
-After a Xiaomi account login and its user configuration are completed, you can continue to add other Xiaomi accounts in the configured Xiaomi Home Integration page.
-
-Method: [Settings > Devices & services > Configured > Xiaomi Home](https://my.home-assistant.io/redirect/integration/?domain=xiaomi_home) > ADD HUB > NEXT > Click here to login > Sign in with Xiaomi account
+Open the configured
+[Xiaomi Home integration](https://my.home-assistant.io/redirect/integration/?domain=xiaomi_home).
+Select **Add hub**, and sign in with another Xiaomi account.
 
 [![Open your Home Assistant instance and show Xiaomi Home integration.](https://my.home-assistant.io/badges/integration.svg)](https://my.home-assistant.io/redirect/integration/?domain=xiaomi_home)
 
-### Update Configurations
+### Update configuration
 
-You can change the configurations in the "Configuration Options" dialog box, in which you can update your user nickname and the list of the devices importing from Xiaomi Home APP, etc.
+Open the configured integration and select **Configure**. You can change the
+nickname, imported homes, imported devices, language, and local-control options.
 
-Method: [Settings > Devices & services > Configured > Xiaomi Home](https://my.home-assistant.io/redirect/integration/?domain=xiaomi_home) > CONFIGURE > Select the option to update
+### Action debug mode
 
-### Debug Mode for Action
-
-You can manually send Action command message with parameters to the device when the debug mode for action is activated. The user interface for sending the Action command with parameters is shown as a Text entity.
-
-Method: [Settings > Devices & services > Configured > Xiaomi Home](https://my.home-assistant.io/redirect/integration/?domain=xiaomi_home) > CONFIGURE > Debug mode for action
+Action debug mode creates a Text entity for actions that need input parameters.
+Use this mode only for development or device-specification tests.
 
 ## Security
 
-Xiaomi Home Integration and the affiliated cloud interface is provided by Xiaomi officially. You need to use your Xiaomi account to login to get your device list. Xiaomi Home Integration implements OAuth 2.0 login process, which does not keep your account password in the Home Assistant application. However, due to the limitation of the Home Assistant platform, the user information (including device information, certificates, tokens, etc.) of your Xiaomi account will be saved in the Home Assistant configuration file in clear text after successful login. You need to ensure that your Home Assistant configuration file is properly stored. The exposure of your configuration file may result in others logging in with your identity.
+The integration uses OAuth 2.0 and does not keep the Xiaomi account password.
+Home Assistant stores account data, device data, certificates, and tokens in
+its configuration storage after sign-in. A person with this storage can use
+your Xiaomi identity.
 
-> If you suspect that your OAuth 2.0 token has been leaked, you can revoke the login authorization of your Xiaomi account by the following steps: Xiaomi Home APP -> Profile -> Click your username and get into Xiaomi Account management page -> Basic info: Apps -> Xiaomi Home (Home Assistant Integration) -> Remove
+If a token can be compromised, remove the **Xiaomi Home (Home Assistant
+Integration)** authorization from the Xiaomi Home app. Then sign in again.
 
 ## FAQ
 
@@ -326,6 +340,18 @@ urn:miot-spec-v2:device:gateway:0000A019:xiaomi-hub1:
 
 Device information service (urn:miot-spec-v2:service:device-information:00007801) of all devices will never be converted to Home Assistant entity.
 
+## Entity ID compatibility
+
+The integration keeps the MIoT-derived unique ID separate from the Home
+Assistant entity ID.
+
+The unique ID remains stable for registry matching. The entity ID uses the
+actual Home Assistant platform domain and a slugified object ID. This rule
+prevents invalid characters from producing an invalid entity ID.
+
+Home Assistant Registry can preserve an existing user-defined entity ID. Do not
+use an entity ID as the stable MIoT device or property identity.
+
 ## Multiple Language Support
 
 There are 13 languages available for selection in the config flow language option of Xiaomi Home, including Simplified Chinese, Traditional Chinese, English, Spanish, Russian, French, German, Japanese, Italian, Dutch, Portuguese, Brazilian Portuguese, and Turkish. The config flow page in Simplified Chinese and English has been manually reviewed by the developer. Other languages are translated by machine translation or community contributions. If you want to modify the words and sentences in the config flow page, you need to modify the json file of the certain language in `custom_components/xiaomi_home/translations/` and `custom_components/xiaomi_home/miot/i18n/` directory.
@@ -385,6 +411,17 @@ Example:
 - [ChangeLog](./CHANGELOG.md)
 - Development Documents: https://developers.home-assistant.io/docs/creating_component_index
 - [FAQ](https://github.com/XiaoMi/ha_xiaomi_home/wiki)
+
+## Documentation style
+
+The English user instructions apply practical rules from ASD-STE100 Simplified
+Technical English, Issue 9. They use active voice, short sentences, and
+consistent terms.
+
+This use is not an ASD-STE100 compliance certification. MIoT and Home Assistant
+technical terms remain necessary.
+
+Reference: ASD STEMG. [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/), Issue 9, 2025.
 
 ## Directory Structure
 
