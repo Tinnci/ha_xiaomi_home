@@ -108,6 +108,21 @@ from .miot_spec import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def ha_entity_domain(entity: Entity) -> str:
+    """Return the Home Assistant platform domain of an entity."""
+    for cls in type(entity).__mro__:
+        module = cls.__module__ or ''
+        if module.startswith('homeassistant.components.'):
+            return module.split('.')[2]
+    return DOMAIN
+
+
+def to_valid_entity_id(entity_id: str) -> str:
+    """Return an entity_id with a slugified object_id."""
+    domain, _, object_id = entity_id.partition('.')
+    return f'{domain}.{slugify_name(object_id)}'
+
+
 class MIoTEntityData:
     """MIoT Entity Data."""
     platform: str
@@ -933,19 +948,25 @@ class MIoTServiceEntity(Entity):
         self._state_sub_id = 0
         self._value_sub_ids = {}
         # Gen entity id
+        ha_domain = ha_entity_domain(self)
         if isinstance(self.entity_data.spec, MIoTSpecInstance):
-            self.entity_id = miot_device.gen_device_entity_id(DOMAIN)
+            self._attr_unique_id = miot_device.gen_device_entity_id(DOMAIN)
+            self.entity_id = to_valid_entity_id(
+                miot_device.gen_device_entity_id(ha_domain))
             self._attr_name = f' {self.entity_data.spec.description_trans}'
         elif isinstance(self.entity_data.spec, MIoTSpecService):
-            self.entity_id = miot_device.gen_service_entity_id(
+            self._attr_unique_id = miot_device.gen_service_entity_id(
                 DOMAIN, siid=self.entity_data.spec.iid,
                 description=self.entity_data.spec.description)
+            self.entity_id = to_valid_entity_id(
+                miot_device.gen_service_entity_id(
+                    ha_domain, siid=self.entity_data.spec.iid,
+                    description=self.entity_data.spec.description))
             self._attr_name = (
                 f'{"* "if self.entity_data.spec.proprietary else " "}'
                 f'{self.entity_data.spec.description_trans}')
             self._attr_entity_category = entity_data.spec.entity_category
         # Set entity attr
-        self._attr_unique_id = self.entity_id
         self._attr_should_poll = False
         self._attr_has_entity_name = True
         self._attr_available = miot_device.online
@@ -1240,11 +1261,14 @@ class MIoTPropertyEntity(Entity):
         self._value_sub_id = 0
         self._pending_write_ha_state_timer = None
         # Gen entity_id
-        self.entity_id = self.miot_device.gen_prop_entity_id(
+        self._attr_unique_id = self.miot_device.gen_prop_entity_id(
             ha_domain=DOMAIN, spec_name=spec.name,
             siid=spec.service.iid, piid=spec.iid)
+        self.entity_id = to_valid_entity_id(
+            self.miot_device.gen_prop_entity_id(
+                ha_domain=ha_entity_domain(self), spec_name=spec.name,
+                siid=spec.service.iid, piid=spec.iid))
         # Set entity attr
-        self._attr_unique_id = self.entity_id
         self._attr_should_poll = False
         self._attr_has_entity_name = True
         self._attr_name = (
@@ -1382,11 +1406,14 @@ class MIoTEventEntity(Entity):
         self.service = spec.service
         self._main_loop = miot_device.miot_client.main_loop
         # Gen entity_id
-        self.entity_id = self.miot_device.gen_event_entity_id(
+        self._attr_unique_id = self.miot_device.gen_event_entity_id(
             ha_domain=DOMAIN, spec_name=spec.name,
             siid=spec.service.iid,  eiid=spec.iid)
+        self.entity_id = to_valid_entity_id(
+            self.miot_device.gen_event_entity_id(
+                ha_domain=ha_entity_domain(self), spec_name=spec.name,
+                siid=spec.service.iid,  eiid=spec.iid))
         # Set entity attr
-        self._attr_unique_id = self.entity_id
         self._attr_should_poll = False
         self._attr_has_entity_name = True
         self._attr_name = (
@@ -1493,11 +1520,14 @@ class MIoTActionEntity(Entity):
         self._main_loop = miot_device.miot_client.main_loop
         self._state_sub_id = 0
         # Gen entity_id
-        self.entity_id = self.miot_device.gen_action_entity_id(
+        self._attr_unique_id = self.miot_device.gen_action_entity_id(
             ha_domain=DOMAIN, spec_name=spec.name,
             siid=spec.service.iid, aiid=spec.iid)
+        self.entity_id = to_valid_entity_id(
+            self.miot_device.gen_action_entity_id(
+                ha_domain=ha_entity_domain(self), spec_name=spec.name,
+                siid=spec.service.iid, aiid=spec.iid))
         # Set entity attr
-        self._attr_unique_id = self.entity_id
         self._attr_should_poll = False
         self._attr_has_entity_name = True
         self._attr_name = (
